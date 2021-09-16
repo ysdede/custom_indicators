@@ -4,7 +4,7 @@ import numba
 import numpy as np
 from jesse.helpers import get_candle_source, slice_candles
 
-BBR = namedtuple('bb', ['upper', 'middle', 'lower', 'ratio'])
+BBR = namedtuple('bbr', ['upper', 'middle', 'lower', 'ratio'])
 
 
 def bbr(candles: np.ndarray, length: int = 20, source_type="close", mult: float = 2.0, sequential=False) -> BBR:
