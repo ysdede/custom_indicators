@@ -1,12 +1,11 @@
 from collections import namedtuple
 
+import custom_indicators as cta
 import numba
 import numpy as np
 from jesse.helpers import get_candle_source, slice_candles
 
-import custom_indicators as cta
-
-OTT = namedtuple('OTT', ['ott', 'mavg'])
+OTT = namedtuple('OTT', ['ott', 'mavg', 'longStop', 'shortStop', 'MT'])
 
 
 def ott(candles: np.ndarray, length: int = 2, percent: float = 1.4, source_type="close", sequential=False) -> OTT:
@@ -37,12 +36,12 @@ def ott(candles: np.ndarray, length: int = 2, percent: float = 1.4, source_type=
 
     MAvg = cta.var(source, length, source_type, sequential=True)
 
-    ott_series = ott_fast(MAvg, percent, length)
+    ott_series, longStop, shortStop, MT = ott_fast(MAvg, percent, length)
 
     if sequential:
-        return OTT(ott_series, MAvg)
+        return OTT(ott_series, MAvg, longStop, shortStop, MT)
     else:
-        return OTT(ott_series[-1], MAvg[-1])
+        return OTT(ott_series[-1], MAvg[-1], longStop[-1], shortStop[-1], MT[-1])
 
 
 @numba.njit
@@ -88,4 +87,4 @@ def ott_fast(MAvg, percent, length):
 
     MT = np.where(dir > 0, longStop, shortStop)
     OTT = np.where(MAvg > MT, MT * (200 + percent) / 200, MT * (200 - percent) / 200)
-    return np.concatenate((np.full(2, 0), OTT[:-2]))
+    return np.concatenate((np.full(2, 0), OTT[:-2])), longStop, shortStop, MT
