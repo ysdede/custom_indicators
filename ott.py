@@ -1,14 +1,17 @@
 from collections import namedtuple
-
-import custom_indicators as cta
-import numba
 import numpy as np
+
+import numba
+import talib
+
 from jesse.helpers import get_candle_source, slice_candles
+import custom_indicators as cta
 
-OTT = namedtuple('OTT', ['ott', 'mavg', 'longStop', 'shortStop', 'MT'])
+OTT = namedtuple('OTT', ['ott', 'mavg', 'long_stop', 'short_stop'])
 
 
-def ott(candles: np.ndarray, length: int = 2, percent: float = 1.4, source_type="close", sequential=False) -> OTT:
+def ott(candles: np.ndarray, length: int = 2, percent: float = 1.4, ma_type="var", source_type="close",
+        sequential=False) -> OTT:
     """
     :param candles: np.ndarray
     :param length: int - default: 2
@@ -18,11 +21,6 @@ def ott(candles: np.ndarray, length: int = 2, percent: float = 1.4, source_type=
     :param sequential: bool - default: False
     :return: Union[float, np.ndarray]
     """
-
-    # Optimized Trend Tracker https://www.tradingview.com/script/zVhoDQME
-    # Author: Anıl Özekşi, Pinescript Developer: KivancOzbilgic
-    # Python port: github.com/ysdede
-    # This port is limited to vidya (VAR) only. More ma's can indeed be added to make it better.
 
     if length < 1 or percent <= 0:
         raise ValueError('Bad parameters.')
@@ -34,14 +32,19 @@ def ott(candles: np.ndarray, length: int = 2, percent: float = 1.4, source_type=
         candles = slice_candles(candles, sequential)
         source = get_candle_source(candles, source_type=source_type)
 
-    MAvg = cta.var(source, length, source_type, sequential=True)
+    if ma_type == 'kama':
+        MAvg = talib.KAMA(source, length)
+    elif ma_type == 'wma':
+        MAvg = talib.WMA(source, length)
+    else:
+        MAvg = cta.var(source, length, source_type, sequential=True)
 
-    ott_series, longStop, shortStop, MT = ott_fast(MAvg, percent, length)
+    ott_series, longStop, shortStop = ott_fast(MAvg, percent, length)
 
     if sequential:
-        return OTT(ott_series, MAvg, longStop, shortStop, MT)
+        return OTT(ott_series, MAvg, longStop, shortStop)
     else:
-        return OTT(ott_series[-1], MAvg[-1], longStop[-1], shortStop[-1], MT[-1])
+        return OTT(ott_series[-1], MAvg[-1], longStop[-1], shortStop[-1])
 
 
 @numba.njit
@@ -87,4 +90,4 @@ def ott_fast(MAvg, percent, length):
 
     MT = np.where(dir > 0, longStop, shortStop)
     OTT = np.where(MAvg > MT, MT * (200 + percent) / 200, MT * (200 - percent) / 200)
-    return np.concatenate((np.full(2, 0), OTT[:-2])), longStop, shortStop, MT
+    return np.concatenate((np.full(2, 0), OTT[:-2])), longStop, shortStop
