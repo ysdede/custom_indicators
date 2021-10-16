@@ -12,6 +12,13 @@ OTT = namedtuple('OTT', ['ott', 'mavg', 'long_stop', 'short_stop'])
 
 def ott(candles: np.ndarray, length: int = 2, percent: float = 1.4, ma_type="var", source_type="close",
         sequential=False) -> OTT:
+
+    # created by:           @Anil_Ozeksi
+    # pinescript developer: @kivancozbilgic
+    # https://www.tradingview.com/script/zVhoDQME/
+    #
+    # python port:          github.com/ysdede
+
     """
     :param candles: np.ndarray
     :param length: int - default: 2
