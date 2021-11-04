@@ -1,3 +1,4 @@
+from .kamaf import kamaf
 from .atr import atr
 from .bb import bb
 from .bbr import bbr

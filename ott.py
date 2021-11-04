@@ -10,7 +10,7 @@ import custom_indicators as cta
 OTT = namedtuple('OTT', ['ott', 'mavg', 'long_stop', 'short_stop'])
 
 
-def ott(candles: np.ndarray, length: int = 2, percent: float = 1.4, ma_type="var", source_type="close",
+def ott(candles: np.ndarray, length: int = 2, percent: float = 1.4, ma_type="kama", source_type="close",
         sequential=False) -> OTT:
 
     # created by:           @Anil_Ozeksi
@@ -39,12 +39,14 @@ def ott(candles: np.ndarray, length: int = 2, percent: float = 1.4, ma_type="var
         candles = slice_candles(candles, sequential)
         source = get_candle_source(candles, source_type=source_type)
 
-    if ma_type == 'kama':
+    if ma_type == 'kamaf':
+        MAvg = cta.kamaf(source, length, sequential=True)
+    elif ma_type == 'kama':
         MAvg = talib.KAMA(source, length)
     elif ma_type == 'wma':
         MAvg = talib.WMA(source, length)
     else:
-        MAvg = cta.var(source, length, source_type, sequential=True)
+        MAvg = cta.var(source, length, sequential=True)
 
     ott_series, longStop, shortStop = ott_fast(MAvg, percent, length)
 
