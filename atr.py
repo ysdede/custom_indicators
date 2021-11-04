@@ -3,7 +3,7 @@ from typing import Union
 import numba
 import numpy as np
 
-import custom_indicators as cta
+import jessetk.indicators as cta
 
 
 def atr(high: np.ndarray, low: np.ndarray, close: np.ndarray, length: int = 14, sequential=False) -> \

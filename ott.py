@@ -5,7 +5,7 @@ import numba
 import talib
 
 from jesse.helpers import get_candle_source, slice_candles
-import custom_indicators as cta
+import jessetk.indicators as cta
 
 OTT = namedtuple('OTT', ['ott', 'mavg', 'long_stop', 'short_stop'])
 
